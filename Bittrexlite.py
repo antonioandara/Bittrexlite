@@ -78,7 +78,31 @@ def tickers(symbol = ''):
     Get latest prices for one or all symbols.
     :param symbol: currency symbol i.e.g RVN-BTC, if left empty returns last price for all symbols
     """
+    symbol = symbol.replace(" ", '')
     method = 'GET'
     path = '/markets/tickers' if symbol == '' else f'/markets/{symbol}/ticker'
     data = request(method, path)
-    return data
+    if type(data) == list:
+        return data
+    else:
+        if 'symbol' in data.keys():
+            return data
+        elif 'code' in data.keys():
+            symbol = list(symbol)
+            symbol.insert(-3, '-')
+            symbol = ''.join(symbol)
+            path = f'/markets/{symbol}/ticker'
+            data = request(method, path)
+            if 'symbol' in data.keys():
+                return data
+            elif 'code' in data.keys():
+                symbol = list(symbol)
+                symbol.pop(-4)
+                symbol.insert(-4, '-')
+                symbol = ''.join(symbol)
+                path = f'/markets/{symbol}/ticker'
+                data = request(method, path)
+                if 'symbol' in data.keys():
+                    return data
+                elif 'code' in data.keys():
+                    return data['code']
