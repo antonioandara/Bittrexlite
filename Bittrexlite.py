@@ -3,6 +3,7 @@ import hmac
 import hashlib
 import logging
 import requests
+from requests import ConnectionError
 import time
 import os
 
@@ -23,12 +24,15 @@ APIid = {'key': "YOUR_API_KEY_HERE",
 
 
 def request(method, path, params=None):
-    resp = requests.request(method, ENDPOINT + path, params=params)
-    data = resp.json()
-    if "msg" in data:
-        logging.error(data['msg'])
-    return data
-
+    try:
+        resp = requests.request(method, ENDPOINT + path, params=params)
+        data = resp.json()
+        if "msg" in data:
+            logging.error(data['msg'])
+        return data
+    except ConnectionError as e:
+        logging.error(e)
+        return {}
 
 def signedRequest(method, path, params=None):
     """
@@ -78,6 +82,7 @@ def tickers(symbol = ''):
     Get latest prices for one or all symbols.
     :param symbol: currency symbol i.e.g RVN-BTC, if left empty returns last price for all symbols
     """
+    symbol = str(symbol)
     symbol = symbol.replace(" ", '')
     method = 'GET'
     path = '/markets/tickers' if symbol == '' else f'/markets/{symbol}/ticker'
@@ -106,3 +111,4 @@ def tickers(symbol = ''):
                     return data
                 elif 'code' in data.keys():
                     return data['code']
+
